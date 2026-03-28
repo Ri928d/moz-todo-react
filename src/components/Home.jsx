@@ -1,28 +1,14 @@
 import { useAuth } from "../AuthContext";
 
-/**
- * Home page component
- * Displays welcome message based on authentication status
- */
 export default function Home() {
   const { isLoggedIn, username } = useAuth();
 
   return (
-    <div className="todoapp stack-large">
-      <h1>Django React Todo</h1>
-      <div className="label__lg">
-        {isLoggedIn ? (
-          <>
-            <p>Welcome back, <strong>{username}</strong>! 🎉</p>
-            <p>You're successfully logged in.</p>
-          </>
-        ) : (
-          <>
-            <p>Welcome to TodoMatic! ✨</p>
-            <p>Please log in or register to manage your todos.</p>
-          </>
-        )}
-      </div>
+    <div style={{ padding: "40px", color: "black", background: "white" }}>
+      <h1>Inventory App</h1>
+      <p>App is rendering.</p>
+      <p>Logged in: {isLoggedIn ? "Yes" : "No"}</p>
+      <p>User: {username || "None"}</p>
     </div>
   );
 }

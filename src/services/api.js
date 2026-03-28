@@ -6,11 +6,17 @@ const api = axios.create({
   baseURL: API_URL,
 });
 
-// Add JWT token to all requests except public endpoints
 api.interceptors.request.use((config) => {
-  const publicEndpoints = ['/auth/register/', '/auth/token/', '/auth/password-reset/', '/auth/password-reset-confirm/'];
-  const isPublicEndpoint = publicEndpoints.some(endpoint => config.url.includes(endpoint));
-  
+  const publicEndpoints = [
+    "/auth/register/",
+    "/auth/token/",
+    "/auth/password-reset/",
+    "/auth/password-reset-confirm/",
+  ];
+  const isPublicEndpoint = publicEndpoints.some((endpoint) =>
+    config.url.includes(endpoint)
+  );
+
   if (!isPublicEndpoint) {
     const accessToken = localStorage.getItem("appAuthentication.access_token");
     if (accessToken) {
@@ -18,6 +24,7 @@ api.interceptors.request.use((config) => {
       config.headers.Authorization = `Bearer ${token}`;
     }
   }
+
   return config;
 });
 
@@ -48,27 +55,25 @@ export const confirmPasswordReset = async (token, newPassword) => {
   return response.data;
 };
 
-export const logout = () => {
-  // Token removal handled by AuthContext
-};
+export const logout = () => {};
 
-export const getTodos = async () => {
-  const response = await api.get("/todos/");
+export const getItems = async () => {
+  const response = await api.get("/items/");
   return response.data;
 };
 
-export const createTodo = async (name) => {
-  const response = await api.post("/todos/", { name });
+export const createItem = async (data) => {
+  const response = await api.post("/items/", data);
   return response.data;
 };
 
-export const updateTodo = async (id, data) => {
-  const response = await api.patch(`/todos/${id}/`, data);
+export const updateItem = async (id, data) => {
+  const response = await api.patch(`/items/${id}/`, data);
   return response.data;
 };
 
-export const deleteTodo = async (id) => {
-  await api.delete(`/todos/${id}/`);
+export const deleteItem = async (id) => {
+  await api.delete(`/items/${id}/`);
 };
 
 export const getProfile = async () => {

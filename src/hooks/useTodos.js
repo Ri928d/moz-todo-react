@@ -1,76 +1,62 @@
 import { useEffect, useState } from "react";
-import { getTodos, createTodo, updateTodo, deleteTodo } from "../services/api";
+import { getItems, createItem, updateItem, deleteItem } from "../services/api";
 
-export function useTodos() {
-  const [tasks, setTasks] = useState([]);
+export function useItems() {
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch current user's todos on mount
   useEffect(() => {
-    fetchTodos();
+    fetchItems();
   }, []);
 
-  async function fetchTodos() {
+  async function fetchItems() {
     try {
       setLoading(true);
-      const data = await getTodos();
-      setTasks(data);
+      const data = await getItems();
+      setItems(data);
     } catch (err) {
       setError(err.message);
-      console.error("Error fetching todos:", err);
+      console.error(err);
     } finally {
       setLoading(false);
     }
   }
 
-  async function toggleTaskCompleted(id) {
-    const task = tasks.find((t) => t.id === id);
+  async function addItem(data) {
     try {
-      const updatedTask = await updateTodo(id, { 
-        completed: !task.completed 
-      });
-      setTasks(tasks.map((t) => (t.id === id ? updatedTask : t)));
+      const newItem = await createItem(data);
+      setItems([...items, newItem]);
+      return newItem;
     } catch (error) {
-      console.error("Error updating task:", error);
+      console.error(error);
     }
   }
 
-  async function deleteTask(id) {
+  async function updateItemField(id, data) {
     try {
-      await deleteTodo(id);
-      setTasks(tasks.filter((task) => id !== task.id));
+      const updated = await updateItem(id, data);
+      setItems(items.map((i) => (i.id === id ? updated : i)));
     } catch (error) {
-      console.error("Error deleting task:", error);
+      console.error(error);
     }
   }
 
-  async function editTask(id, newName) {
+  async function deleteItemById(id) {
     try {
-      const updatedTask = await updateTodo(id, { name: newName });
-      setTasks(tasks.map((t) => (t.id === id ? updatedTask : t)));
+      await deleteItem(id);
+      setItems(items.filter((i) => i.id !== id));
     } catch (error) {
-      console.error("Error editing task:", error);
-    }
-  }
-
-  async function addTask(name) {
-    try {
-      const newTask = await createTodo(name);
-      setTasks([...tasks, newTask]);
-      return newTask;
-    } catch (error) {
-      console.error("Error adding task:", error);
+      console.error(error);
     }
   }
 
   return {
-    tasks,
+    items,
     loading,
     error,
-    toggleTaskCompleted,
-    deleteTask,
-    editTask,
-    addTask,
+    addItem,
+    updateItemField,
+    deleteItemById,
   };
 }
