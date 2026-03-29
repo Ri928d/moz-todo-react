@@ -93,6 +93,9 @@ export default function TodoApp() {
     return <div style={{ padding: "40px" }}>Redirecting to login...</div>;
   }
 
+  const hoverOn = (e) => (e.target.style.opacity = 0.8);
+  const hoverOff = (e) => (e.target.style.opacity = 1);
+
   return (
     <div style={{ padding: "40px", color: "black", background: "white" }}>
       <h1 style={{ marginBottom: "24px" }}>Inventory Management</h1>
@@ -101,7 +104,7 @@ export default function TodoApp() {
         onSubmit={handleSubmit}
         style={{
           display: "grid",
-          gap: "12px",
+          gap: "16px",
           maxWidth: "700px",
           marginBottom: "30px",
         }}
@@ -110,60 +113,71 @@ export default function TodoApp() {
           <p style={{ color: "red", margin: 0 }}>{formError}</p>
         )}
 
-        <input
-          type="text"
-          name="name"
-          placeholder="Item name"
-          value={formData.name}
-          onChange={handleChange}
-          required
-          style={{ padding: "12px" }}
-        />
+        <div>
+          <label>Item Name</label>
+          <input
+            type="text"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+            style={{ padding: "12px", width: "100%" }}
+          />
+        </div>
 
-        <input
-          type="text"
-          name="description"
-          placeholder="Description"
-          value={formData.description}
-          onChange={handleChange}
-          style={{ padding: "12px" }}
-        />
+        <div>
+          <label>Description</label>
+          <input
+            type="text"
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            style={{ padding: "12px", width: "100%" }}
+          />
+        </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
-          <input
-            type="number"
-            name="quantity"
-            placeholder="Quantity"
-            value={formData.quantity}
-            onChange={handleChange}
-            required
-            min="0"
-            style={{ padding: "12px" }}
-          />
+          <div>
+            <label>Quantity</label>
+            <input
+              type="number"
+              name="quantity"
+              value={formData.quantity}
+              onChange={handleChange}
+              min="0"
+              required
+              style={{ padding: "12px", width: "100%" }}
+            />
+          </div>
 
-          <select
-            name="category"
-            value={formData.category}
-            onChange={handleChange}
-            style={{ padding: "12px" }}
-          >
-            <option value="electronics">Electronics</option>
-            <option value="clothing">Clothing</option>
-            <option value="food">Food</option>
-            <option value="office">Office</option>
-            <option value="other">Other</option>
-          </select>
+          <div>
+            <label>Category</label>
+            <select
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              style={{ padding: "12px", width: "100%" }}
+            >
+              <option value="electronics">Electronics</option>
+              <option value="clothing">Clothing</option>
+              <option value="food">Food</option>
+              <option value="office">Office</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
 
-          <input
-            type="number"
-            name="low_stock_threshold"
-            placeholder="Low stock threshold"
-            value={formData.low_stock_threshold}
-            onChange={handleChange}
-            required
-            min="0"
-            style={{ padding: "12px" }}
-          />
+          <div>
+            <label>Low Stock Alert Level</label>
+            <input
+              type="number"
+              name="low_stock_threshold"
+              value={formData.low_stock_threshold}
+              onChange={handleChange}
+              min="0"
+              required
+              style={{ padding: "12px", width: "100%" }}
+            />
+          </div>
         </div>
 
         <button type="submit" style={{ padding: "12px", width: "180px" }}>
@@ -221,50 +235,65 @@ export default function TodoApp() {
           >
             <div style={{ display: "flex", justifyContent: "space-between", gap: "20px" }}>
               <div>
-                <h3 style={{ margin: "0 0 8px 0" }}>{item.name}</h3>
-                <p style={{ margin: "0 0 8px 0" }}>
-                  <strong>Description:</strong> {item.description || "No description"}
-                </p>
-                <p style={{ margin: "0 0 8px 0" }}>
-                  <strong>Category:</strong> {item.category}
-                </p>
-                <p style={{ margin: "0 0 8px 0" }}>
-                  <strong>Quantity:</strong> {item.quantity}
-                </p>
-                <p style={{ margin: "0 0 8px 0" }}>
-                  <strong>Threshold:</strong> {item.low_stock_threshold}
-                </p>
-                <p
-                  style={{
-                    margin: 0,
-                    fontWeight: "bold",
-                    color: item.is_low_stock ? "#d32f2f" : "#2e7d32",
-                  }}
-                >
+                <h3>{item.name}</h3>
+                <p><strong>Description:</strong> {item.description || "No description"}</p>
+                <p><strong>Category:</strong> {item.category}</p>
+                <p><strong>Quantity:</strong> {item.quantity}</p>
+                <p><strong>Threshold:</strong> {item.low_stock_threshold}</p>
+                <p style={{ fontWeight: "bold", color: item.is_low_stock ? "#d32f2f" : "#2e7d32" }}>
                   {item.is_low_stock ? "Low Stock" : "In Stock"}
                 </p>
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px", minWidth: "120px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", minWidth: "120px" }}>
                 <button
                   onClick={() => updateItemField(item.id, { quantity: item.quantity + 1 })}
-                  style={{ padding: "10px" }}
+                  onMouseOver={hoverOn}
+                  onMouseOut={hoverOff}
+                  style={{
+                    padding: "10px",
+                    background: "#2e7d32",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                  }}
                 >
                   Increase
                 </button>
+
                 <button
                   onClick={() =>
                     updateItemField(item.id, {
                       quantity: Math.max(0, item.quantity - 1),
                     })
                   }
-                  style={{ padding: "10px" }}
+                  onMouseOver={hoverOn}
+                  onMouseOut={hoverOff}
+                  style={{
+                    padding: "10px",
+                    background: "#f9a825",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                  }}
                 >
                   Decrease
                 </button>
+
                 <button
                   onClick={() => deleteItemById(item.id)}
-                  style={{ padding: "10px" }}
+                  onMouseOver={hoverOn}
+                  onMouseOut={hoverOff}
+                  style={{
+                    padding: "10px",
+                    background: "#d32f2f",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                  }}
                 >
                   Delete
                 </button>
