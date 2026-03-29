@@ -18,8 +18,19 @@ export default function TodoApp() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [stockFilter, setStockFilter] = useState("all");
+  const [sortOption, setSortOption] = useState("newest");
   const [formError, setFormError] = useState("");
   const [actionMessage, setActionMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [busyItemId, setBusyItemId] = useState(null);
+  const [editingItemId, setEditingItemId] = useState(null);
+  const [editData, setEditData] = useState({
+    name: "",
+    description: "",
+    quantity: 0,
+    category: "other",
+    low_stock_threshold: 5,
+  });
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -36,6 +47,17 @@ export default function TodoApp() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
+      ...prev,
+      [name]:
+        name === "quantity" || name === "low_stock_threshold"
+          ? Number(value)
+          : value,
+    }));
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditData((prev) => ({
       ...prev,
       [name]:
         name === "quantity" || name === "low_stock_threshold"
@@ -63,15 +85,42 @@ export default function TodoApp() {
       return;
     }
 
-    await addItem({
-      ...formData,
-      name: formData.name.trim(),
-      description: formData.description.trim(),
+    try {
+      setIsSubmitting(true);
+      await addItem({
+        ...formData,
+        name: formData.name.trim(),
+        description: formData.description.trim(),
+      });
+
+      setActionMessage("Item added successfully.");
+
+      setFormData({
+        name: "",
+        description: "",
+        quantity: 0,
+        category: "other",
+        low_stock_threshold: 5,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const startEditing = (item) => {
+    setEditingItemId(item.id);
+    setEditData({
+      name: item.name,
+      description: item.description || "",
+      quantity: item.quantity,
+      category: item.category,
+      low_stock_threshold: item.low_stock_threshold,
     });
+  };
 
-    setActionMessage("Item added successfully.");
-
-    setFormData({
+  const cancelEditing = () => {
+    setEditingItemId(null);
+    setEditData({
       name: "",
       description: "",
       quantity: 0,
@@ -80,8 +129,33 @@ export default function TodoApp() {
     });
   };
 
+  const saveEdit = async (itemId) => {
+    if (!editData.name.trim()) {
+      setActionMessage("Item name is required.");
+      return;
+    }
+
+    if (editData.quantity < 0 || editData.low_stock_threshold < 0) {
+      setActionMessage("Quantity and threshold cannot be negative.");
+      return;
+    }
+
+    try {
+      setBusyItemId(itemId);
+      await updateItemField(itemId, {
+        ...editData,
+        name: editData.name.trim(),
+        description: editData.description.trim(),
+      });
+      setEditingItemId(null);
+      setActionMessage("Item updated successfully.");
+    } finally {
+      setBusyItemId(null);
+    }
+  };
+
   const filteredItems = useMemo(() => {
-    return items.filter((item) => {
+    const filtered = items.filter((item) => {
       const description = item.description || "";
       const category = item.category || "";
 
@@ -99,7 +173,33 @@ export default function TodoApp() {
 
       return matchesSearch && matchesStockFilter;
     });
-  }, [items, searchTerm, stockFilter]);
+
+    const sorted = [...filtered];
+
+    switch (sortOption) {
+      case "oldest":
+        sorted.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        break;
+      case "quantity-high":
+        sorted.sort((a, b) => b.quantity - a.quantity);
+        break;
+      case "quantity-low":
+        sorted.sort((a, b) => a.quantity - b.quantity);
+        break;
+      case "name-asc":
+        sorted.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case "name-desc":
+        sorted.sort((a, b) => b.name.localeCompare(a.name));
+        break;
+      case "newest":
+      default:
+        sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        break;
+    }
+
+    return sorted;
+  }, [items, searchTerm, stockFilter, sortOption]);
 
   const totalItems = items.length;
   const lowStockItems = items.filter((i) => i.is_low_stock).length;
@@ -109,8 +209,13 @@ export default function TodoApp() {
     return <div style={{ padding: "40px" }}>Redirecting to login...</div>;
   }
 
-  const hoverOn = (e) => (e.target.style.opacity = 0.8);
-  const hoverOff = (e) => (e.target.style.opacity = 1);
+  const hoverOn = (e) => {
+    if (!e.target.disabled) e.target.style.opacity = 0.8;
+  };
+
+  const hoverOff = (e) => {
+    e.target.style.opacity = 1;
+  };
 
   return (
     <div style={{ padding: "40px", color: "black", background: "white" }}>
@@ -277,30 +382,35 @@ export default function TodoApp() {
           </div>
         </div>
 
+        <p style={{ margin: "0", color: "#555", fontSize: "14px" }}>
+          The low stock alert level determines when an item is flagged as low stock.
+        </p>
+
         <button
           type="submit"
+          disabled={isSubmitting}
           style={{
             padding: "12px",
             width: "180px",
-            background: "#1976d2",
+            background: isSubmitting ? "#90caf9" : "#1976d2",
             color: "white",
             border: "none",
             borderRadius: "6px",
-            cursor: "pointer",
+            cursor: isSubmitting ? "not-allowed" : "pointer",
           }}
           onMouseOver={hoverOn}
           onMouseOut={hoverOff}
         >
-          Add Item
+          {isSubmitting ? "Adding..." : "Add Item"}
         </button>
       </form>
 
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "2fr 1fr",
+          gridTemplateColumns: "2fr 1fr 1fr",
           gap: "12px",
-          maxWidth: "700px",
+          maxWidth: "900px",
           marginBottom: "24px",
         }}
       >
@@ -321,9 +431,22 @@ export default function TodoApp() {
           <option value="low">Low Stock</option>
           <option value="ok">In Stock</option>
         </select>
+
+        <select
+          value={sortOption}
+          onChange={(e) => setSortOption(e.target.value)}
+          style={{ padding: "12px" }}
+        >
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+          <option value="quantity-high">Quantity High-Low</option>
+          <option value="quantity-low">Quantity Low-High</option>
+          <option value="name-asc">Name A-Z</option>
+          <option value="name-desc">Name Z-A</option>
+        </select>
       </div>
 
-      {loading && <p>Loading...</p>}
+      {loading && <p>Loading inventory...</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
 
       <div style={{ marginBottom: "16px" }}>
@@ -340,7 +463,11 @@ export default function TodoApp() {
             background: "#fafafa",
           }}
         >
-          No items found for the current search/filter.
+          {items.length === 0
+            ? "No inventory items yet. Add your first item to begin tracking stock."
+            : searchTerm || stockFilter !== "all"
+            ? "No items match your current search or filter."
+            : "No items available."}
         </div>
       ) : (
         <ul style={{ listStyle: "none", padding: 0, maxWidth: "900px" }}>
@@ -356,108 +483,263 @@ export default function TodoApp() {
                 background: item.is_low_stock ? "#fff5f5" : "#f9fff9",
               }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: "20px",
-                }}
-              >
-                <div>
-                  <h3 style={{ margin: "0 0 8px 0" }}>{item.name}</h3>
-                  <p style={{ margin: "0 0 8px 0" }}>
-                    <strong>Description:</strong> {item.description || "No description"}
-                  </p>
-                  <p style={{ margin: "0 0 8px 0" }}>
-                    <strong>Category:</strong> {item.category}
-                  </p>
-                  <p style={{ margin: "0 0 8px 0" }}>
-                    <strong>Quantity:</strong> {item.quantity}
-                  </p>
-                  <p style={{ margin: "0 0 8px 0" }}>
-                    <strong>Threshold:</strong> {item.low_stock_threshold}
-                  </p>
-                  <p
+              {editingItemId === item.id ? (
+                <div style={{ display: "grid", gap: "12px" }}>
+                  <div>
+                    <label style={{ display: "block", marginBottom: "6px", fontWeight: "bold" }}>
+                      Item Name
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={editData.name}
+                      onChange={handleEditChange}
+                      style={{ padding: "12px", width: "100%" }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", marginBottom: "6px", fontWeight: "bold" }}>
+                      Description
+                    </label>
+                    <input
+                      type="text"
+                      name="description"
+                      value={editData.description}
+                      onChange={handleEditChange}
+                      style={{ padding: "12px", width: "100%" }}
+                    />
+                  </div>
+
+                  <div
                     style={{
-                      margin: 0,
-                      fontWeight: "bold",
-                      color: item.is_low_stock ? "#d32f2f" : "#2e7d32",
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr 1fr",
+                      gap: "12px",
                     }}
                   >
-                    {item.is_low_stock ? "Low Stock" : "In Stock"}
-                  </p>
-                </div>
+                    <div>
+                      <label style={{ display: "block", marginBottom: "6px", fontWeight: "bold" }}>
+                        Quantity
+                      </label>
+                      <input
+                        type="number"
+                        name="quantity"
+                        min="0"
+                        value={editData.quantity}
+                        onChange={handleEditChange}
+                        style={{ padding: "12px", width: "100%" }}
+                      />
+                    </div>
 
+                    <div>
+                      <label style={{ display: "block", marginBottom: "6px", fontWeight: "bold" }}>
+                        Category
+                      </label>
+                      <select
+                        name="category"
+                        value={editData.category}
+                        onChange={handleEditChange}
+                        style={{ padding: "12px", width: "100%" }}
+                      >
+                        <option value="electronics">Electronics</option>
+                        <option value="clothing">Clothing</option>
+                        <option value="food">Food</option>
+                        <option value="office">Office</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style={{ display: "block", marginBottom: "6px", fontWeight: "bold" }}>
+                        Low Stock Alert Level
+                      </label>
+                      <input
+                        type="number"
+                        name="low_stock_threshold"
+                        min="0"
+                        value={editData.low_stock_threshold}
+                        onChange={handleEditChange}
+                        style={{ padding: "12px", width: "100%" }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                    <button
+                      onClick={() => saveEdit(item.id)}
+                      disabled={busyItemId === item.id}
+                      onMouseOver={hoverOn}
+                      onMouseOut={hoverOff}
+                      style={{
+                        padding: "10px 14px",
+                        background: "#1976d2",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "4px",
+                        cursor: busyItemId === item.id ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      {busyItemId === item.id ? "Saving..." : "Save Changes"}
+                    </button>
+
+                    <button
+                      onClick={cancelEditing}
+                      disabled={busyItemId === item.id}
+                      onMouseOver={hoverOn}
+                      onMouseOut={hoverOff}
+                      style={{
+                        padding: "10px 14px",
+                        background: "#757575",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "4px",
+                        cursor: busyItemId === item.id ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
                 <div
                   style={{
                     display: "flex",
-                    flexDirection: "column",
-                    gap: "10px",
-                    minWidth: "120px",
+                    justifyContent: "space-between",
+                    gap: "20px",
                   }}
                 >
-                  <button
-                    onClick={async () => {
-                      await updateItemField(item.id, { quantity: item.quantity + 1 });
-                      setActionMessage("Quantity updated successfully.");
-                    }}
-                    onMouseOver={hoverOn}
-                    onMouseOut={hoverOff}
-                    style={{
-                      padding: "10px",
-                      background: "#2e7d32",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Increase
-                  </button>
+                  <div>
+                    <h3 style={{ margin: "0 0 8px 0" }}>{item.name}</h3>
+                    <p style={{ margin: "0 0 8px 0" }}>
+                      <strong>Description:</strong> {item.description || "No description"}
+                    </p>
+                    <p style={{ margin: "0 0 8px 0" }}>
+                      <strong>Category:</strong> {item.category}
+                    </p>
+                    <p style={{ margin: "0 0 8px 0" }}>
+                      <strong>Quantity:</strong> {item.quantity}
+                    </p>
+                    <p style={{ margin: "0 0 8px 0" }}>
+                      <strong>Threshold:</strong> {item.low_stock_threshold}
+                    </p>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontWeight: "bold",
+                        color: item.is_low_stock ? "#d32f2f" : "#2e7d32",
+                      }}
+                    >
+                      {item.is_low_stock ? "Low Stock" : "In Stock"}
+                    </p>
+                  </div>
 
-                  <button
-                    onClick={async () => {
-                      await updateItemField(item.id, {
-                        quantity: Math.max(0, item.quantity - 1),
-                      });
-                      setActionMessage("Quantity updated successfully.");
-                    }}
-                    onMouseOver={hoverOn}
-                    onMouseOut={hoverOff}
+                  <div
                     style={{
-                      padding: "10px",
-                      background: "#f9a825",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: "pointer",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "10px",
+                      minWidth: "140px",
                     }}
                   >
-                    Decrease
-                  </button>
+                    <button
+                      onClick={async () => {
+                        try {
+                          setBusyItemId(item.id);
+                          await updateItemField(item.id, { quantity: item.quantity + 1 });
+                          setActionMessage("Quantity updated successfully.");
+                        } finally {
+                          setBusyItemId(null);
+                        }
+                      }}
+                      disabled={busyItemId === item.id}
+                      onMouseOver={hoverOn}
+                      onMouseOut={hoverOff}
+                      style={{
+                        padding: "10px",
+                        background: "#2e7d32",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "4px",
+                        cursor: busyItemId === item.id ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      {busyItemId === item.id ? "Updating..." : "Increase"}
+                    </button>
 
-                  <button
-                    onClick={async () => {
-                      if (window.confirm("Delete this item?")) {
-                        await deleteItemById(item.id);
-                        setActionMessage("Item deleted successfully.");
-                      }
-                    }}
-                    onMouseOver={hoverOn}
-                    onMouseOut={hoverOff}
-                    style={{
-                      padding: "10px",
-                      background: "#d32f2f",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Delete
-                  </button>
+                    <button
+                      onClick={async () => {
+                        try {
+                          setBusyItemId(item.id);
+                          await updateItemField(item.id, {
+                            quantity: Math.max(0, item.quantity - 1),
+                          });
+                          setActionMessage("Quantity updated successfully.");
+                        } finally {
+                          setBusyItemId(null);
+                        }
+                      }}
+                      disabled={busyItemId === item.id}
+                      onMouseOver={hoverOn}
+                      onMouseOut={hoverOff}
+                      style={{
+                        padding: "10px",
+                        background: "#f9a825",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "4px",
+                        cursor: busyItemId === item.id ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      {busyItemId === item.id ? "Updating..." : "Decrease"}
+                    </button>
+
+                    <button
+                      onClick={() => startEditing(item)}
+                      disabled={busyItemId === item.id}
+                      onMouseOver={hoverOn}
+                      onMouseOut={hoverOff}
+                      style={{
+                        padding: "10px",
+                        background: "#1976d2",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "4px",
+                        cursor: busyItemId === item.id ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      onClick={async () => {
+                        if (window.confirm("Delete this item?")) {
+                          try {
+                            setBusyItemId(item.id);
+                            await deleteItemById(item.id);
+                            setActionMessage("Item deleted successfully.");
+                          } finally {
+                            setBusyItemId(null);
+                          }
+                        }
+                      }}
+                      disabled={busyItemId === item.id}
+                      onMouseOver={hoverOn}
+                      onMouseOut={hoverOff}
+                      style={{
+                        padding: "10px",
+                        background: "#d32f2f",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "4px",
+                        cursor: busyItemId === item.id ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      {busyItemId === item.id ? "Deleting..." : "Delete"}
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </li>
           ))}
         </ul>
