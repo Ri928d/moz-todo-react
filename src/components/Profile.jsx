@@ -7,9 +7,10 @@ const CLOUDINARY_UPLOAD_URL = (cloudName) =>
   `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
 
 export default function Profile() {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, username } = useAuth();
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
   const [email, setEmail] = useState("");
@@ -24,6 +25,7 @@ export default function Profile() {
 
     const loadProfile = async () => {
       try {
+        setError("");
         const profile = await getProfile();
         setEmail(profile.email || "");
         setImageUrl(profile.image_url || "");
@@ -64,9 +66,7 @@ export default function Profile() {
 
   const handleFileChange = async (event) => {
     const file = event.target.files?.[0];
-    if (!file) {
-      return;
-    }
+    if (!file) return;
 
     setError("");
     setStatus("");
@@ -76,6 +76,7 @@ export default function Profile() {
       const uploadResult = await uploadToCloudinary(file);
       setImageUrl(uploadResult.secure_url || "");
       setImagePublicId(uploadResult.public_id || "");
+      setStatus("Image uploaded. Save profile to keep changes.");
     } catch (err) {
       setError(err.message || "Failed to upload image.");
     } finally {
@@ -87,6 +88,7 @@ export default function Profile() {
     event.preventDefault();
     setError("");
     setStatus("");
+    setSaving(true);
 
     try {
       const payload = {
@@ -104,21 +106,23 @@ export default function Profile() {
         ? JSON.stringify(err.response.data)
         : "Unable to update profile.";
       setError(message);
+    } finally {
+      setSaving(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="todoapp stack-large">
+      <div style={{ padding: "40px", background: "white", color: "black" }}>
         <h1>Profile</h1>
-        <p>Loading...</p>
+        <p>Loading profile...</p>
       </div>
     );
   }
 
   if (!isLoggedIn) {
     return (
-      <div className="todoapp stack-large">
+      <div style={{ padding: "40px", background: "white", color: "black" }}>
         <h1>Profile</h1>
         <p>
           Please <Link to="/login">log in</Link> to view your profile.
@@ -128,46 +132,151 @@ export default function Profile() {
   }
 
   return (
-    <div className="todoapp stack-large">
-      <h1>Profile</h1>
-      {status && <p className="success-message">{status}</p>}
-      {error && <p className="error-message">{error}</p>}
+    <div style={{ padding: "40px", background: "white", color: "black" }}>
+      <h1 style={{ marginBottom: "12px" }}>User Profile</h1>
+      <p style={{ marginBottom: "24px", fontSize: "18px" }}>
+        Manage your account details and optional profile image.
+      </p>
 
-      <div className="stack-small">
-        {imageUrl ? (
-          <img src={imageUrl} alt="Profile" width="120" height="120" />
-        ) : (
-          <div>No profile image yet.</div>
-        )}
-      </div>
-
-      <form onSubmit={handleSave} className="auth-form">
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          required
-          className="input__lg"
-        />
-
-        <input
-          type="file"
-          name="profile_image"
-          accept="image/*"
-          onChange={handleFileChange}
-          className="input__lg"
-        />
-
-        <button
-          type="submit"
-          className="btn btn__primary btn__lg"
-          disabled={uploading}
+      {status && (
+        <p
+          style={{
+            background: "#e8f5e9",
+            color: "#2e7d32",
+            padding: "12px",
+            borderRadius: "6px",
+            marginBottom: "16px",
+          }}
         >
-          {uploading ? "Uploading..." : "Save Profile"}
-        </button>
-      </form>
+          {status}
+        </p>
+      )}
+
+      {error && (
+        <p
+          style={{
+            background: "#ffebee",
+            color: "#c62828",
+            padding: "12px",
+            borderRadius: "6px",
+            marginBottom: "16px",
+          }}
+        >
+          {error}
+        </p>
+      )}
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "220px 1fr",
+          gap: "24px",
+          alignItems: "start",
+          maxWidth: "900px",
+        }}
+      >
+        <div
+          style={{
+            border: "1px solid #ddd",
+            borderRadius: "8px",
+            padding: "20px",
+            textAlign: "center",
+            background: "#fafafa",
+          }}
+        >
+          {imageUrl ? (
+            <img
+              src={imageUrl}
+              alt="Profile"
+              style={{
+                width: "140px",
+                height: "140px",
+                objectFit: "cover",
+                borderRadius: "50%",
+                marginBottom: "12px",
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: "140px",
+                height: "140px",
+                borderRadius: "50%",
+                background: "#ddd",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 12px auto",
+                fontSize: "36px",
+                fontWeight: "bold",
+                color: "#555",
+              }}
+            >
+              {username ? username.charAt(0).toUpperCase() : "U"}
+            </div>
+          )}
+
+          <p style={{ margin: 0, fontWeight: "bold" }}>{username}</p>
+        </div>
+
+        <form
+          onSubmit={handleSave}
+          style={{
+            display: "grid",
+            gap: "16px",
+            maxWidth: "600px",
+          }}
+        >
+          <div>
+            <label>Username</label>
+            <input
+              type="text"
+              value={username || ""}
+              disabled
+              style={{ padding: "12px", width: "100%", background: "#f5f5f5" }}
+            />
+          </div>
+
+          <div>
+            <label>Email</label>
+            <input
+              type="email"
+              name="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              required
+              style={{ padding: "12px", width: "100%" }}
+            />
+          </div>
+
+          <div>
+            <label>Profile Image</label>
+            <input
+              type="file"
+              name="profile_image"
+              accept="image/*"
+              onChange={handleFileChange}
+              style={{ padding: "12px", width: "100%" }}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={uploading || saving}
+            style={{
+              padding: "12px",
+              width: "180px",
+              background: uploading || saving ? "#999" : "#1976d2",
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              cursor: uploading || saving ? "not-allowed" : "pointer",
+            }}
+          >
+            {uploading ? "Uploading..." : saving ? "Saving..." : "Save Profile"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
