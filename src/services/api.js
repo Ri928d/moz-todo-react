@@ -13,15 +13,18 @@ api.interceptors.request.use((config) => {
     "/auth/password-reset/",
     "/auth/password-reset-confirm/",
   ];
+
   const isPublicEndpoint = publicEndpoints.some((endpoint) =>
-    config.url.includes(endpoint)
+    config.url?.includes(endpoint)
   );
 
   if (!isPublicEndpoint) {
-    const accessToken = localStorage.getItem("appAuthentication.access_token");
-    if (accessToken) {
-      const token = JSON.parse(accessToken);
-      config.headers.Authorization = `Bearer ${token}`;
+    const token = localStorage.getItem("appAuthentication.access_token");
+
+    if (token) {
+      const parsedToken = JSON.parse(token);
+      config.headers = config.headers || {};
+      config.headers.Authorization = `Bearer ${parsedToken}`;
     }
   }
 

@@ -73,7 +73,7 @@ export const Login = () => {
   const handleSubmit = async (formData) => {
     const data = await apiLogin(formData.username, formData.password);
     login(data.access, data.refresh, formData.username);
-    navigate("/todos");
+    navigate("/inventory");
   };
 
   const fields = [
@@ -114,7 +114,7 @@ export const Register = () => {
     await apiRegister(formData.username, formData.email, formData.password);
     const loginData = await apiLogin(formData.username, formData.password);
     login(loginData.access, loginData.refresh, formData.username);
-    navigate("/todos");
+    navigate("/inventory");
   };
 
   const fields = [
