@@ -1,445 +1,184 @@
-# React Todo Frontend
+# Inventory Management System — Frontend
 
-A modern React application for managing todos with user authentication. This is an ongoing project demonstrating how to build a full-stack application with React frontend and Django REST API backend.
+A React-based frontend for managing inventory items, built as part of the Enterprise Software Engineering module. Connects to a Django REST API backend for authentication, CRUD operations, stock monitoring, and audit logging.
 
-> **Note:** This is a learning project and an example for students. It demonstrates best practices for setting up React applications with authentication and API integration, but is not meant to be production-perfect code.
+## Live Demo
 
-## 🚀 Live Demo
+- **Frontend:** https://inventory-frontend-i2y1.onrender.com
+- **Backend API:** https://inventory-backend-2775.onrender.com/api
+- **Backend Repo:** https://github.com/Ri928d/django-backend
 
-The frontend is deployed on Render and accessible at:
-**https://moz-todo-react.onrender.com**
+> **Note:** The backend runs on Render's free tier and may take up to 60 seconds to respond on the first request after inactivity. Please be patient when first loading the app.
 
-⚠️ **Important:** The backend API on Render's free tier spins down after inactivity. The first API request may take up to **1 minute** to respond. Please be patient!
-
-### Backend API
-
-This frontend connects to the Django REST API backend:
-**https://django-backend-aqrl.onrender.com/api**
-
-Backend repository: https://github.com/anandveeraswamy/django-backend
-
-You can test the API directly at: https://django-backend-aqrl.onrender.com/api/docs/
-
-## 📋 Features
+## Features
 
 ### Authentication
-- **User Registration** - Create new account with username, email, and password
-- **Login/Logout** - Secure JWT-based authentication
-- **Password Reset** - Request password reset via email
-- **Persistent Sessions** - Stay logged in across browser sessions
-- **Profile Management** - View and update user profile with image uploads
+- User registration with username, email, and password
+- Login with JWT token management (access + refresh)
+- Password reset via email (SendGrid integration)
+- Protected routes — unauthenticated users are redirected to login
+- Persistent sessions using localStorage
 
-### Todo Management
-- **Create Todos** - Add new tasks
-- **Mark Complete** - Toggle todo completion status
-- **Edit Todos** - Update task names inline
-- **Delete Todos** - Remove completed or unwanted tasks
-- **Filter Todos** - View All, Active, or Completed tasks
-- **Real-time Updates** - Changes reflect immediately
+### Inventory Management
+- **Create** — add items with name, description, quantity, category, and low stock threshold
+- **Read** — view all items in a card-based list with status badges
+- **Update** — inline editing of all item fields, plus quick +/- quantity buttons
+- **Delete** — remove items with confirmation dialog
+- Search by name, description, or category
+- Filter by stock status (all, low stock, in stock)
+- Sort by date, quantity, or name
+- Dashboard summary cards (total items, low stock count, total units)
 
-### User Experience
-- **Responsive Design** - Works on desktop, tablet, and mobile
-- **Loading States** - Visual feedback during API calls
-- **Error Handling** - User-friendly error messages
-- **Protected Routes** - Automatic redirect to login for authenticated pages
+### Stock Audit History
+- View the change history for any item via "Show Stock History" button
+- Tracks every quantity change with old/new values, reason, and timestamp
+- Reasons are categorised: Created, Increased, Decreased, Edited
 
-## 🛠️ Tech Stack
+### User Profiles
+- View and update email address
+- Upload profile image via Cloudinary
+- Username display with avatar fallback
 
-- **React 18** - UI library
-- **React Router** - Client-side routing
-- **Vite** - Build tool and dev server
-- **Axios** - HTTP client for API requests
-- **JWT Authentication** - Token-based auth with localStorage
-- **Cloudinary** - Image uploads for profile pictures
-- **CSS** - Custom styling (no UI framework)
+## Tech Stack
 
-## 📁 Project Structure
+- **React 18** — UI library
+- **React Router 6** — client-side routing
+- **Vite** — build tool and dev server
+- **Axios** — HTTP client for API requests
+- **JWT** — token-based authentication stored in localStorage
+- **Cloudinary** — image uploads for profile pictures
+- **CSS** — custom styling (no UI framework)
+
+## Project Structure
 
 ```
 moz-todo-react/
 ├── src/
-│   ├── components/           # React components
-│   │   ├── Authentication.jsx   # Login, Register, Password Reset
-│   │   ├── Home.jsx            # Landing page
-│   │   ├── TodoApp.jsx         # Main todo interface
-│   │   ├── Todo.jsx            # Individual todo item
-│   │   ├── Form.jsx            # Add todo form
-│   │   ├── FilterButton.jsx   # Filter controls
-│   │   ├── Navigation.jsx      # Navigation bar
-│   │   └── Profile.jsx         # User profile page
-│   ├── services/
-│   │   └── api.js              # API client and endpoints
+│   ├── components/
+│   │   ├── InventoryApp.jsx      # Main inventory page (CRUD, search, audit log)
+│   │   ├── Authentication.jsx    # Login, Register, Password Reset forms
+│   │   ├── Navigation.jsx        # Top navigation bar
+│   │   ├── Home.jsx              # Landing page
+│   │   ├── Profile.jsx           # User profile management
+│   │   └── ProtectedRoute.jsx    # Auth guard for protected pages
 │   ├── hooks/
-│   │   └── useTodos.js         # Custom hook for todo logic
-│   ├── test/                   # Test setup files
-│   ├── AuthContext.jsx         # Authentication context
-│   ├── App.jsx                 # Main app component
-│   ├── main.jsx                # Entry point
-│   └── index.css               # Global styles
+│   │   └── useInventory.js       # Custom hook for inventory CRUD state
+│   ├── services/
+│   │   └── api.js                # Axios instance and all API call functions
+│   ├── AuthContext.jsx            # React Context for authentication state
+│   ├── App.jsx                    # Root component with routing
+│   ├── main.jsx                   # Entry point
+│   └── index.css                  # Global styles
 ├── public/
-│   └── _redirects              # Netlify/Render redirects
-├── index.html                  # HTML template
-├── vite.config.js              # Vite configuration
-├── package.json                # Dependencies
-└── .env                        # Environment variables
+│   └── _redirects                 # Redirect rules for SPA on Render
+├── index.html
+├── vite.config.js
+├── package.json
+└── .env
 ```
 
-## 🚀 Local Setup Instructions
+## Architecture
+
+The frontend follows a clear separation of concerns:
+
+- **Components** handle UI rendering and user interaction
+- **Hooks** (`useInventory`) manage data fetching and state for inventory items
+- **Services** (`api.js`) handle all HTTP communication with the backend
+- **Context** (`AuthContext`) manages authentication state globally
+- **ProtectedRoute** guards authenticated pages, redirecting to login if needed
+
+The frontend communicates **only** with the Django REST API middleware layer — it never accesses the database directly. This matches the three-layer enterprise architecture required by the assignment.
+
+## Local Setup
 
 ### Prerequisites
-
-- Node.js 22.22.0 (might also work on later versions)
-- npm (comes with Node.js)
+- Node.js 18+ (tested with 22.22.0)
+- npm
 - Git
+- The backend server running locally or accessible via URL
 
-### Step 1: Clone the Repository
+### Steps
 
 ```bash
+# 1. Clone the repository
 git clone <your-repo-url>
 cd moz-todo-react
-```
 
-### Step 2: Install Dependencies
-
-```bash
+# 2. Install dependencies
 npm install
+
+# 3. Set up environment variables
+# Create a .env file in the project root:
 ```
-
-### Step 3: Set Up Environment Variables
-
-Create a `.env` file in the `moz-todo-react` directory:
 
 ```env
 VITE_DJANGO_API_URL=http://localhost:8000/api
-VITE_CLOUDINARY_CLOUD_NAME=your-cloudinary-cloud-name
-VITE_CLOUDINARY_UPLOAD_PRESET=your-upload-preset
+VITE_CLOUDINARY_CLOUD_NAME=your-cloud-name       # Optional
+VITE_CLOUDINARY_UPLOAD_PRESET=your-upload-preset  # Optional
 ```
 
-**For local development:**
-- `VITE_DJANGO_API_URL` should point to your local Django backend (default: `http://localhost:8000/api`)
-- Cloudinary variables are optional (only needed for profile image uploads)
-
-> **Note:** All Vite environment variables must start with `VITE_` to be accessible in the browser.
-
-### Step 4: Start the Development Server
-
 ```bash
+# 4. Start the development server
 npm run dev
 ```
 
-The app will be available at:
-**http://localhost:3000**
+The app will be available at http://localhost:3000 (or the port Vite assigns).
 
-### Step 5: Connect to Backend
+### Connecting to the Backend
 
-**Option A: Use Local Backend (Recommended for Development)**
+**Local development:** Start the Django backend in a separate terminal:
+```bash
+cd django-backend
+python manage.py runserver
+```
+Make sure `.env` has `VITE_DJANGO_API_URL=http://localhost:8000/api`.
 
-1. Follow the backend setup instructions in the backend README
-2. Start the Django server: `python manage.py runserver`
-3. Make sure `.env` has `VITE_DJANGO_API_URL=http://localhost:8000/api`
-
-**Option B: Use Production Backend**
-
-Update `.env` to use the deployed backend:
+**Production backend:** Update `.env` to point at the deployed API:
 ```env
-VITE_DJANGO_API_URL=https://django-backend-aqrl.onrender.com/api
+VITE_DJANGO_API_URL=https://inventory-backend-2775.onrender.com/api
 ```
 
-⚠️ Remember: Production backend may have 1-minute cold start delay!
+> **Important:** Vite bakes environment variables into the build at compile time. After changing `.env`, you must restart the dev server or rebuild.
 
-## 🔗 How Backend and Frontend Work Together
+## Deployment (Render)
 
-### Architecture
-
-```
-┌─────────────────┐         HTTP/HTTPS          ┌─────────────────┐
-│  React Frontend │  ◄────────────────────────► │  Django Backend │
-│   (Port 3000)   │    JSON + JWT Tokens        │   (Port 8000)   │
-└─────────────────┘                             └─────────────────┘
-        │                                                  │
-        │                                                  │
-        ▼                                                  ▼
-  Browser Storage                                  PostgreSQL DB
-  (localStorage)                                   (Users + Todos)
-```
-
-### Authentication Flow
-
-1. **User registers/logs in** → Frontend sends credentials to backend
-2. **Backend validates** → Returns JWT access & refresh tokens
-3. **Frontend stores tokens** → Saved in localStorage (namespaced)
-4. **Subsequent requests** → Frontend includes token in Authorization header
-5. **Backend verifies token** → Returns user-specific data
-
-### API Communication
-
-All API calls go through `src/services/api.js`:
-
-```javascript
-// Example: Fetching todos
-GET https://django-backend-aqrl.onrender.com/api/todos/
-Headers: { Authorization: "Bearer <access_token>" }
-
-// Response: Array of todo objects
-[
-  { id: 1, name: "Learn React", completed: false, user: 5 },
-  { id: 2, name: "Build project", completed: true, user: 5 }
-]
-```
-
-### Key Integration Points
-
-- **axios interceptor** - Automatically adds JWT token to protected endpoints
-- **AuthContext** - Manages authentication state across components
-- **Protected routes** - Redirects unauthenticated users to login
-- **Error handling** - Displays API errors to users
-
-## 🎯 Available Scripts
-
-### Development
-
-```bash
-npm run dev          # Start dev server (http://localhost:3000)
-npm run build        # Build for production
-npm run preview      # Preview production build locally
-```
-
-### Testing
-
-```bash
-npm run test         # Run tests with Vitest
-npm run coverage     # Generate test coverage report
-```
-
-### Linting
-
-```bash
-npm run lint         # Check for code issues
-```
-
-## 📡 API Integration
-
-The frontend communicates with the backend through these key endpoints:
-
-### Authentication Endpoints
-
-| Action | Method | Endpoint | Description |
-|--------|--------|----------|-------------|
-| Register | POST | `/api/auth/register/` | Create new user account |
-| Login | POST | `/api/auth/token/` | Get JWT tokens |
-| Refresh Token | POST | `/api/auth/token/refresh/` | Refresh access token |
-| Get Profile | GET | `/api/auth/profile/` | Fetch user profile |
-| Update Profile | PATCH | `/api/auth/profile/` | Update user info/image |
-| Password Reset | POST | `/api/auth/password-reset/` | Request reset email |
-| Confirm Reset | POST | `/api/auth/password-reset-confirm/` | Set new password |
-
-### Todo Endpoints
-
-| Action | Method | Endpoint | Description |
-|--------|--------|----------|-------------|
-| List Todos | GET | `/api/todos/` | Get all user's todos |
-| Create Todo | POST | `/api/todos/` | Add new todo |
-| Update Todo | PUT/PATCH | `/api/todos/{id}/` | Modify todo |
-| Delete Todo | DELETE | `/api/todos/{id}/` | Remove todo |
-
-See the backend's Swagger documentation for detailed request/response formats:
-**https://django-backend-aqrl.onrender.com/api/docs/**
-
-## 🗂️ State Management
-
-### Authentication State (AuthContext)
-
-- Manages login status, username, tokens
-- Persists authentication across page refreshes
-- Uses namespaced localStorage (`appAuthentication.*`)
-
-### Todo State (useTodos hook)
-
-- Fetches todos from backend on component mount
-- Handles CRUD operations with optimistic updates
-- Manages loading and error states
-
-## 🌐 Deployment (Render)
-
-This project is deployed on Render as a static site.
-
-### Environment Variables on Render
-
-```
-VITE_DJANGO_API_URL=https://django-backend-aqrl.onrender.com/api
-VITE_CLOUDINARY_CLOUD_NAME=<your-cloudinary-name>
-VITE_CLOUDINARY_UPLOAD_PRESET=<your-preset>
-```
+The frontend is deployed as a Static Site on Render.
 
 ### Build Settings
+- **Build Command:** `npm install && npm run build`
+- **Publish Directory:** `dist`
 
-**Build Command:**
-```bash
-npm install && npm run build
+### Environment Variables on Render
+```
+VITE_DJANGO_API_URL=https://inventory-backend-2775.onrender.com/api
+VITE_CLOUDINARY_CLOUD_NAME=dxjlref2c
+VITE_CLOUDINARY_UPLOAD_PRESET=todo-preset
 ```
 
-**Publish Directory:**
-```
-dist
-```
+### SPA Redirect Rule
+A rewrite rule is configured so that all paths serve `index.html`, which lets React Router handle client-side routing:
+- **Source:** `/*`
+- **Destination:** `/index.html`
+- **Action:** Rewrite
 
-### Redirects Configuration
-
-The `public/_redirects` file handles client-side routing:
-
-```
-/*    /index.html   200
-```
-
-This ensures React Router works correctly on page refresh.
-
-## 📝 Common Issues & Solutions
-
-### Issue: "Network Error" or "Failed to fetch"
-
-**Causes:**
-- Backend server is not running
-- Wrong API URL in `.env`
-- CORS not configured on backend
-
-**Solutions:**
-1. Check backend is running at the URL in `.env`
-2. Verify `VITE_DJANGO_API_URL` is correct
-3. Check backend's `CORS_ALLOWED_ORIGINS` includes your frontend URL
-
-### Issue: "401 Unauthorized" on todos page
-
-**Cause:** Invalid or expired JWT token
-
-**Solutions:**
-1. Clear localStorage: `localStorage.clear()` in browser console
-2. Log out and log back in
-3. Check token is being sent in Authorization header (inspect Network tab)
-
-### Issue: Changes not reflecting after updating `.env`
-
-**Cause:** Vite doesn't hot-reload environment variables
-
-**Solution:** Restart the dev server:
-```bash
-# Stop server (Ctrl+C)
-npm run dev
-```
-
-### Issue: Profile image upload fails
-
-**Cause:** Missing or incorrect Cloudinary configuration
-
-**Solution:**
-1. Verify `VITE_CLOUDINARY_CLOUD_NAME` is set
-2. Verify `VITE_CLOUDINARY_UPLOAD_PRESET` is set
-3. Check preset allows unsigned uploads in Cloudinary dashboard
-
-### Issue: Backend takes forever to respond (production)
-
-**Cause:** Render free tier cold start
-
-**Solution:** Wait 30-60 seconds for the first request. Subsequent requests will be fast.
-
-## 🧪 Testing
-
-> **Note:** Testing is currently basic and limited. This project includes minimal test coverage as an example for students.
-
-The project uses Vitest and React Testing Library for testing.
-
-### Running Tests
+## Available Scripts
 
 ```bash
-npm run test         # Run all tests
-npm run coverage     # Generate test coverage report
+npm run dev       # Start dev server
+npm run build     # Production build to dist/
+npm run preview   # Preview production build locally
+npm run lint      # Run ESLint
 ```
 
-### Test Files
+## Key Technical Decisions
 
-- `src/components/__tests__/` - Component tests (limited coverage)
-- `src/hooks/__tests__/` - Custom hook tests
-- Coverage reports appear in `coverage/` directory
+- **Custom hook (`useInventory`)** encapsulates all inventory CRUD logic and state, keeping the main component focused on rendering. This makes it easier to test and reuse.
+- **Axios interceptor** automatically attaches the JWT token to authenticated requests. Public endpoints (register, login, password reset) are excluded from this.
+- **ProtectedRoute component** handles auth guarding at the route level rather than inside each component. This is a standard enterprise pattern.
+- **Inline editing** was chosen over a separate edit page to reduce navigation and keep the user flow simple — you click Edit, change fields in place, and save.
+- **Stock history** is fetched on demand (when the user clicks "Show Stock History") rather than loaded with every item, to keep the initial page load fast.
+- **CSS is custom** rather than using a framework like Tailwind or Bootstrap — this was a deliberate choice to demonstrate understanding of styling and to keep the bundle size small.
 
-## 📚 Learning Resources
+## Use of AI
 
-- [React Documentation](https://react.dev/)
-- [React Router](https://reactrouter.com/)
-- [Vite Guide](https://vitejs.dev/guide/)
-- [Axios Documentation](https://axios-http.com/)
-- [JWT Introduction](https://jwt.io/introduction)
-
-## 🤝 For Students
-
-This project demonstrates:
-- ✅ React component architecture
-- ✅ JWT authentication implementation
-- ✅ API integration with axios
-- ✅ React Router for navigation
-- ✅ Custom hooks for reusable logic
-- ✅ Context API for global state
-- ✅ Protected routes
-- ✅ Form handling and validation
-- ✅ Conditional rendering
-- ✅ Deployment to production
-
-**What you can learn:**
-1. How to structure a React application
-2. How to integrate with a REST API
-3. How to implement authentication flow
-4. How to manage application state
-5. How to handle errors gracefully
-6. How to deploy a React app
-7. How frontend and backend communicate
-
-## 🔄 Development Workflow
-
-### Working with Backend and Frontend
-
-**Full-stack development:**
-
-1. **Terminal 1:** Start backend
-   ```bash
-   cd django-todo-backend
-   python manage.py runserver
-   ```
-
-2. **Terminal 2:** Start frontend
-   ```bash
-   cd moz-todo-react
-   npm run dev
-   ```
-
-3. **Browser:** Visit http://localhost:3000
-4. **API Testing:** Visit http://localhost:8000/api/docs/
-
-**Making changes:**
-- Frontend changes hot-reload automatically
-- Backend changes require server restart (or use django-extensions)
-- API changes should be tested in Swagger before updating frontend
-
-## 📄 License
-
-This is a student learning project. Feel free to use it as a reference for your own projects.
-
-## 🐛 Known Issues
-
-- Render free tier has cold start delays (~1 minute)
-- Profile image upload requires Cloudinary setup
-- No offline support (requires backend connection)
-- Todos don't sync across multiple browser tabs
-
-## 🎨 Screenshots & Demo
-
-Register, login, and start managing your todos! The interface is clean and intuitive:
-
-- **Home Page** - Welcome message with login/register options
-- **Todo Dashboard** - Full CRUD interface with filter buttons
-- **Profile Page** - View and update user information
-
-Try it live: https://moz-todo-react.onrender.com
-
----
-
-**Happy Coding! 🚀**
-
-**Built with ❤️ by students, for students**
+AI tools were used for research and debugging assistance during development.
