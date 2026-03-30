@@ -13,42 +13,36 @@ export function useItems() {
   async function fetchItems() {
     try {
       setLoading(true);
+      setError(null);
       const data = await getItems();
       setItems(data);
     } catch (err) {
-      setError(err.message);
-      console.error(err);
+      const message =
+        err.response?.status === 401
+          ? "Session expired. Please log in again."
+          : "Failed to load inventory. Please try again.";
+      setError(message);
+      console.error("fetchItems error:", err);
     } finally {
       setLoading(false);
     }
   }
 
   async function addItem(data) {
-    try {
-      const newItem = await createItem(data);
-      setItems([...items, newItem]);
-      return newItem;
-    } catch (error) {
-      console.error(error);
-    }
+    const newItem = await createItem(data);
+    setItems((prev) => [...prev, newItem]);
+    return newItem;
   }
 
   async function updateItemField(id, data) {
-    try {
-      const updated = await updateItem(id, data);
-      setItems(items.map((i) => (i.id === id ? updated : i)));
-    } catch (error) {
-      console.error(error);
-    }
+    const updated = await updateItem(id, data);
+    setItems((prev) => prev.map((i) => (i.id === id ? updated : i)));
+    return updated;
   }
 
   async function deleteItemById(id) {
-    try {
-      await deleteItem(id);
-      setItems(items.filter((i) => i.id !== id));
-    } catch (error) {
-      console.error(error);
-    }
+    await deleteItem(id);
+    setItems((prev) => prev.filter((i) => i.id !== id));
   }
 
   return {
@@ -58,5 +52,6 @@ export function useItems() {
     addItem,
     updateItemField,
     deleteItemById,
+    refetch: fetchItems,
   };
 }

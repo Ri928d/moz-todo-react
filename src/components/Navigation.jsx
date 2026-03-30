@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 
 export default function Navigation() {
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn, username, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -12,36 +12,53 @@ export default function Navigation() {
 
   return (
     <nav className="navbar">
-      <h1>
-        <NavLink to="/">Inventory App</NavLink>
-      </h1>
-      <ul className="nav-links">
-        <li>
-          <NavLink to="/">Home</NavLink>
-        </li>
-        {isLoggedIn ? (
-          <>
-            <li>
-              <NavLink to="/inventory">Inventory</NavLink>
-            </li>
-            <li>
-              <NavLink to="/profile">Profile</NavLink>
-            </li>
-            <li>
-              <button onClick={handleLogout}>Logout</button>
-            </li>
-          </>
-        ) : (
-          <>
-            <li>
-              <NavLink to="/register">Register</NavLink>
-            </li>
-            <li>
-              <NavLink to="/login">Login</NavLink>
-            </li>
-          </>
-        )}
-      </ul>
+      <div className="navbar-inner">
+        <NavLink to="/" className="navbar-brand">
+          Inventory Manager
+        </NavLink>
+
+        <ul className="nav-links">
+          <li>
+            <NavLink to="/" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"} end>
+              Home
+            </NavLink>
+          </li>
+
+          {isLoggedIn ? (
+            <>
+              <li>
+                <NavLink to="/inventory" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
+                  Inventory
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/profile" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
+                  Profile
+                </NavLink>
+              </li>
+              <li className="nav-user">
+                <span className="nav-username">{username}</span>
+                <button onClick={handleLogout} className="btn btn-logout">
+                  Logout
+                </button>
+              </li>
+            </>
+          ) : (
+            <>
+              <li>
+                <NavLink to="/login" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
+                  Login
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/register" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
+                  Register
+                </NavLink>
+              </li>
+            </>
+          )}
+        </ul>
+      </div>
     </nav>
   );
 }

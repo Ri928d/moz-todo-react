@@ -15,10 +15,7 @@ const AuthForm = ({ onSubmit, fields, submitButtonText }) => {
   const [error, setError] = useState("");
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
@@ -27,16 +24,12 @@ const AuthForm = ({ onSubmit, fields, submitButtonText }) => {
     try {
       await onSubmit(formData);
     } catch (error) {
-      console.error("AuthForm submission error:", error);
-      
-      // Extract detailed error message from API response
       if (error.response?.data) {
         const errorData = error.response.data;
-        // Convert error object to readable message
         const errorMessages = Object.entries(errorData)
           .map(([field, messages]) => {
-            const messageArray = Array.isArray(messages) ? messages : [messages];
-            return `${field}: ${messageArray.join(", ")}`;
+            const arr = Array.isArray(messages) ? messages : [messages];
+            return `${field}: ${arr.join(", ")}`;
           })
           .join("; ");
         setError(errorMessages || "An error occurred. Please try again.");
@@ -48,20 +41,24 @@ const AuthForm = ({ onSubmit, fields, submitButtonText }) => {
 
   return (
     <form onSubmit={handleSubmit} className="auth-form">
-      {error && <p className="error-message">{error}</p>}
+      {error && <p className="form-error">{error}</p>}
       {fields.map((field) => (
-        <input
-          key={field.name}
-          type={field.type}
-          name={field.name}
-          placeholder={field.placeholder}
-          value={formData[field.name]}
-          onChange={handleChange}
-          required={field.required}
-          className="input__lg"
-        />
+        <div key={field.name} className="form-field">
+          <label htmlFor={`auth-${field.name}`}>{field.placeholder}</label>
+          <input
+            id={`auth-${field.name}`}
+            type={field.type}
+            name={field.name}
+            placeholder={field.placeholder}
+            value={formData[field.name]}
+            onChange={handleChange}
+            required={field.required}
+          />
+        </div>
       ))}
-      <button type="submit" className="btn btn__primary btn__lg">{submitButtonText}</button>
+      <button type="submit" className="btn btn-primary btn-lg">
+        {submitButtonText}
+      </button>
     </form>
   );
 };
@@ -77,30 +74,18 @@ export const Login = () => {
   };
 
   const fields = [
-    {
-      name: "username",
-      type: "text",
-      placeholder: "Username",
-      required: true,
-    },
-    {
-      name: "password",
-      type: "password",
-      placeholder: "Password",
-      required: true,
-    },
+    { name: "username", type: "text", placeholder: "Username", required: true },
+    { name: "password", type: "password", placeholder: "Password", required: true },
   ];
 
   return (
-    <div className="todoapp stack-large">
+    <div className="page-container auth-page">
       <h1>Login</h1>
-      <AuthForm
-        onSubmit={handleSubmit}
-        fields={fields}
-        submitButtonText="Login"
-      />
-      <p>
+      <AuthForm onSubmit={handleSubmit} fields={fields} submitButtonText="Login" />
+      <p className="auth-links">
         <Link to="/forgot-password">Forgot password?</Link>
+        {" · "}
+        <Link to="/register">Create an account</Link>
       </p>
     </div>
   );
@@ -118,29 +103,18 @@ export const Register = () => {
   };
 
   const fields = [
-    {
-      name: "username",
-      type: "text",
-      placeholder: "Username",
-      required: true,
-    },
+    { name: "username", type: "text", placeholder: "Username", required: true },
     { name: "email", type: "email", placeholder: "Email", required: true },
-    {
-      name: "password",
-      type: "password",
-      placeholder: "Password",
-      required: true,
-    },
+    { name: "password", type: "password", placeholder: "Password", required: true },
   ];
 
   return (
-    <div className="todoapp stack-large">
+    <div className="page-container auth-page">
       <h1>Register</h1>
-      <AuthForm
-        onSubmit={handleSubmit}
-        fields={fields}
-        submitButtonText="Register"
-      />
+      <AuthForm onSubmit={handleSubmit} fields={fields} submitButtonText="Register" />
+      <p className="auth-links">
+        Already have an account? <Link to="/login">Login</Link>
+      </p>
     </div>
   );
 };
@@ -156,32 +130,37 @@ export const RequestPasswordReset = () => {
     setStatus("");
     try {
       const response = await requestPasswordReset(email);
-      setStatus(response.message || "If the email exists, a reset link was sent.");
+      setStatus(response.message || "If the email exists, a reset link has been sent.");
     } catch (err) {
-      const message = err.response?.data?.error || "Unable to send reset email.";
-      setError(message);
+      setError(err.response?.data?.error || "Unable to send reset email.");
     }
   };
 
   return (
-    <div className="todoapp stack-large">
+    <div className="page-container auth-page">
       <h1>Reset Password</h1>
-      {status && <p className="success-message">{status}</p>}
-      {error && <p className="error-message">{error}</p>}
+      {status && <div className="toast toast--success">{status}</div>}
+      {error && <div className="toast toast--error">{error}</div>}
       <form onSubmit={handleSubmit} className="auth-form">
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="input__lg"
-        />
-        <button type="submit" className="btn btn__primary btn__lg">
+        <div className="form-field">
+          <label htmlFor="reset-email">Email Address</label>
+          <input
+            id="reset-email"
+            type="email"
+            name="email"
+            placeholder="your@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+        <button type="submit" className="btn btn-primary btn-lg">
           Send Reset Link
         </button>
       </form>
+      <p className="auth-links">
+        <Link to="/login">Back to Login</Link>
+      </p>
     </div>
   );
 };
@@ -212,39 +191,42 @@ export const ConfirmPasswordReset = () => {
 
     try {
       const response = await confirmPasswordReset(token, newPassword);
-      setStatus(response.message || "Password reset successful.");
-      navigate("/login");
+      setStatus(response.message || "Password reset successful. Redirecting to login...");
+      setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
-      const message = err.response?.data?.error || "Unable to reset password.";
-      setError(message);
+      setError(err.response?.data?.error || "Unable to reset password.");
     }
   };
 
   return (
-    <div className="todoapp stack-large">
+    <div className="page-container auth-page">
       <h1>Set New Password</h1>
-      {status && <p className="success-message">{status}</p>}
-      {error && <p className="error-message">{error}</p>}
+      {status && <div className="toast toast--success">{status}</div>}
+      {error && <div className="toast toast--error">{error}</div>}
       <form onSubmit={handleSubmit} className="auth-form">
-        <input
-          type="password"
-          name="new_password"
-          placeholder="New password"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          required
-          className="input__lg"
-        />
-        <input
-          type="password"
-          name="confirm_password"
-          placeholder="Confirm new password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          required
-          className="input__lg"
-        />
-        <button type="submit" className="btn btn__primary btn__lg">
+        <div className="form-field">
+          <label htmlFor="new-pw">New Password</label>
+          <input
+            id="new-pw"
+            type="password"
+            placeholder="New password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            required
+          />
+        </div>
+        <div className="form-field">
+          <label htmlFor="confirm-pw">Confirm Password</label>
+          <input
+            id="confirm-pw"
+            type="password"
+            placeholder="Confirm new password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+          />
+        </div>
+        <button type="submit" className="btn btn-primary btn-lg">
           Update Password
         </button>
       </form>

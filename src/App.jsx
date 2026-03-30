@@ -6,27 +6,44 @@ import {
   RequestPasswordReset,
   ConfirmPasswordReset,
 } from "./components/Authentication";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Profile from "./components/Profile";
 import Home from "./components/Home";
 import Navigation from "./components/Navigation";
-import TodoApp from "./components/TodoApp";
+import InventoryApp from "./components/InventoryApp";
 
 const App = () => {
   return (
     <AuthProvider>
       <Router>
-        <div className="App">
+        <div className="app">
           <Navigation />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/inventory" element={<TodoApp />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/forgot-password" element={<RequestPasswordReset />} />
-            <Route path="/reset-password" element={<ConfirmPasswordReset />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="*" element={<h2>404 Not Found</h2>} />
-          </Routes>
+          <main className="main-content">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route
+                path="/inventory"
+                element={
+                  <ProtectedRoute>
+                    <InventoryApp />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/register" element={<Register />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/forgot-password" element={<RequestPasswordReset />} />
+              <Route path="/reset-password" element={<ConfirmPasswordReset />} />
+              <Route path="*" element={<div className="page-container"><h2>404 — Page Not Found</h2><p>The page you are looking for does not exist.</p></div>} />
+            </Routes>
+          </main>
         </div>
       </Router>
     </AuthProvider>
