@@ -767,3 +767,30 @@ img {
     font-size: 1.5rem;
   }
 }
+
+/* --- slight tweaks I made after testing (kept forgetting to fix these) --- */
+
+.inventory-form h2 {
+  letter-spacing: -0.2px;
+}
+
+/* the footer felt too close to the content so I added extra space */
+footer {
+  margin-top: 48px !important;
+}
+
+/* tried to make the dashboard cards feel a bit more spaced */
+.dashboard-cards {
+  margin-bottom: 26px;
+}
+
+/* the search bar inputs felt too tight on mobile */
+@media (max-width: 600px) {
+  .search-bar {
+    gap: 8px;
+  }
+  
+  .dashboard-card-value {
+    font-size: 1.5rem;
+  }
+}

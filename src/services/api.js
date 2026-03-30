@@ -79,6 +79,11 @@ export const deleteItem = async (id) => {
   await api.delete(`/items/${id}/`);
 };
 
+export const getItemHistory = async (id) => {
+  const response = await api.get(`/items/${id}/history/`);
+  return response.data;
+};
+
 export const getProfile = async () => {
   const response = await api.get("/auth/profile/");
   return response.data;
